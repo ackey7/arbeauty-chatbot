@@ -1,19 +1,17 @@
 import express from "express";
 import bodyParser from "body-parser";
-import { router as metaRouter } from "./webhooks/meta.js";
+import metaRouter from "./webhooks/meta.js";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
 app.use(bodyParser.json());
 
-// Webhook de Meta (WhatsApp)
-app.use("/webhook/meta", metaRouter);
+// 🔹 Conectamos el router de Meta
+app.use("/webhooks/meta", metaRouter);
 
+// 🔹 Ruta base de prueba
 app.get("/", (req, res) => {
-  res.send("Servidor de ARBEAUTY funcionando 🚀");
+  res.send("Servidor ARBEAUTY activo 🚀");
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}`);
-});
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Servidor corriendo en el puerto ${PORT}`));
