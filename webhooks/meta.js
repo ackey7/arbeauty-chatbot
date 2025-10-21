@@ -149,7 +149,7 @@ async function sendWelcomeButtons(to, name) {
   };
 
   await axios.post(
-    `https://graph.facebook.com/v19.0/807852259084079/messages`,
+    "https://graph.facebook.com/v19.0/807852259084079/messages",
     body,
     {
       headers: {
@@ -163,7 +163,7 @@ async function sendWelcomeButtons(to, name) {
 // 🔹 Función: enviar texto simple
 async function sendTextMessage(to, text) {
   await axios.post(
-    `https://graph.facebook.com/v19.0/807852259084079/messages`,
+    "https://graph.facebook.com/v19.0/807852259084079/messages",
     {
       messaging_product: "whatsapp",
       to,
@@ -200,7 +200,7 @@ async function sendMainMenu(to, name) {
   };
 
   await axios.post(
-    `https://graph.facebook.com/v19.0/807852259084079/messages`,
+    "https://graph.facebook.com/v19.0/807852259084079/messages",
     body,
     {
       headers: {
@@ -226,12 +226,14 @@ router.post("/enviar", async (req, res) => {
     const numeroDestino = telefono || ultimoNumero;
 
     if (!numeroDestino) {
-      return res.status(400).json({ error: "No hay sesión activa para enviar mensaje" });
+      return res
+        .status(400)
+        .json({ error: "No hay sesión activa para enviar mensaje" });
     }
 
     // Enviar mensaje a WhatsApp
     await axios.post(
-      `https://graph.facebook.com/v19.0/807852259084079/messages`,
+      "https://graph.facebook.com/v19.0/807852259084079/messages",
       {
         messaging_product: "whatsapp",
         to: numeroDestino,
@@ -258,10 +260,14 @@ router.post("/enviar", async (req, res) => {
 
     res.sendStatus(200);
   } catch (error) {
-    console.error("❌ Error enviando mensaje:", error.response?.data || error.message);
-    res.status(500).json({ error: "Error enviando mensaje a WhatsApp" });
+    console.error(
+      "❌ Error enviando mensaje:",
+      error.response?.data || error.message
+    );
+    res
+      .status(500)
+      .json({ error: "Error enviando mensaje a WhatsApp" });
   }
 });
-
 
 export default router;

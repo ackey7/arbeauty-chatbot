@@ -1,30 +1,41 @@
-// 🟣 server.js — arbeauty-chatbot (versión optimizada para Render)
+// 🟣 server.js — versión estable ARBEAUTY Chatbot
 
 import express from "express";
 import bodyParser from "body-parser";
-import metaRouter from "./webhooks/meta.js";
+import cors from "cors"; // 👈 Importamos CORS
 import http from "http";
 import { Server } from "socket.io";
+import metaRouter from "./webhooks/meta.js";
 
-// Inicializamos Express
+// 🔹 Inicializamos Express
 const app = express();
+
+// 🔹 Habilitar CORS globalmente (necesario para desarrollo local)
+app.use(
+  cors({
+    origin: "*", // ⚠️ en producción cambia esto por tu dominio real
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+  })
+);
+
+// 🔹 Parseo de JSON
 app.use(bodyParser.json());
 
-// Creamos servidor HTTP (necesario para usar socket.io)
+// 🔹 Servidor HTTP (necesario para socket.io)
 const server = http.createServer(app);
 
-// Configuramos Socket.io
+// 🔹 Configuración de Socket.io
 const io = new Server(server, {
   cors: {
-    origin: "*", // Puedes restringirlo luego a tu dominio frontend
-    methods: ["GET", "POST"],
+    origin: "*", // Permite conexión desde tu panel (live-server o dominio)
   },
 });
 
-// Guardamos la referencia de io para usarla en otros archivos
+// Guardamos la instancia global de Socket.io
 app.set("io", io);
 
-// Escuchar eventos de conexión desde el frontend
+// 🧩 Escuchar conexiones en tiempo real desde el frontend
 io.on("connection", (socket) => {
   console.log("🟢 Cliente conectado al socket:", socket.id);
 
@@ -33,16 +44,16 @@ io.on("connection", (socket) => {
   });
 });
 
-// 🔹 Conectamos el router de Meta (WhatsApp Webhook)
+// 🔹 Conectar el router de Meta (WhatsApp Webhook)
 app.use("/webhooks/meta", metaRouter);
 
 // 🔹 Ruta base de prueba
 app.get("/", (req, res) => {
-  res.send("Servidor ARBEAUTY activo 🚀 con conexión en tiempo real ✅");
+  res.send("🚀 Servidor ARBEAUTY activo y listo 💖 con conexión en tiempo real ✅");
 });
 
-// 🔹 Inicializamos el servidor
-const PORT = process.env.PORT || 10000;
-server.listen(PORT, () =>
-  console.log(`🚀 Servidor corriendo en el puerto ${PORT}`)
-);
+// 🔹 Iniciar servidor
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
+});
