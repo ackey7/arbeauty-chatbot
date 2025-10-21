@@ -1,0 +1,105 @@
+body {
+  font-family: 'Inter', sans-serif;
+  background: #fdf6f9;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background-color: #f7cfe0;
+  padding: 15px;
+  text-align: center;
+  color: #5a004f;
+}
+
+h1 {
+  margin: 0;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  max-width: 600px;
+  margin: 20px auto;
+  background: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  overflow: hidden;
+}
+
+#messages {
+  flex: 1;
+  padding: 15px;
+  height: 400px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.message {
+  margin: 8px 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  max-width: 80%;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
+/* 🟣 Mensajes del cliente (WhatsApp) */
+.message.client {
+  align-self: flex-start;
+  background-color: #f8f8f8;
+  border: 1px solid #eee;
+  color: #333;
+}
+
+/* 💗 Mensajes del bot (tú, ARBEAUTY) */
+.message.bot {
+  align-self: flex-end;
+  background-color: #ffe3ef;
+  border: 1px solid #f7cfe0;
+  color: #5a004f;
+  text-align: right;
+}
+
+/* ✨ Mensaje del sistema (inicio, estado, etc.) */
+.system {
+  text-align: center;
+  color: #aaa;
+  font-size: 0.9rem;
+  margin-top: 10px;
+}
+
+#reply-box {
+  display: flex;
+  padding: 15px;
+  border-top: 1px solid #eee;
+  background-color: #fff;
+}
+
+#reply {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: none;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+#send-btn {
+  background-color: #ff9ecf;
+  border: none;
+  color: white;
+  padding: 10px 20px;
+  margin-left: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+#send-btn:hover {
+  background-color: #ff85bf;
+}

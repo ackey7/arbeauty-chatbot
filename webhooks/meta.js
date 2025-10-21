@@ -1,3 +1,5 @@
+// 🟣 meta.js — arbeauty-chatbot
+
 import express from "express";
 import axios from "axios";
 
@@ -28,11 +30,14 @@ router.get("/", (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const data = req.body;
+    const io = req.app.get("io"); // obtenemos la instancia del socket
 
     if (data.object) {
       const message = data.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
       const from = message?.from;
       const name = message?.profile?.name || "bella";
+
+      if (!message) return res.sendStatus(200); // ignorar mensajes vacíos
 
       // Si no hay sesión previa, la creamos
       if (!sessions[from]) {
@@ -40,6 +45,7 @@ router.post("/", async (req, res) => {
       }
 
       const session = sessions[from];
+      let textoRecibido = "";
 
       // 🧩 Si el mensaje viene de un botón interactivo
       if (message?.interactive?.button_reply?.id) {
@@ -52,16 +58,16 @@ router.post("/", async (req, res) => {
           else if (selected === "tgu") ciudad = "Tegucigalpa";
           else ciudad = "Otra ciudad";
 
-          console.log(`📍 Cliente ${name} ubicado en: ${ciudad}`);
           session.ciudad = ciudad;
           session.step = "menu_principal";
+
+          textoRecibido = `📍 ${name} seleccionó: ${ciudad}`;
 
           await sendTextMessage(
             from,
             `Perfecto ${name} 💖, te atenderemos desde nuestra sucursal de ${ciudad}.`
           );
 
-          // Pequeña pausa antes de mostrar menú principal
           setTimeout(async () => {
             await sendMainMenu(from, name);
           }, 1500);
@@ -70,30 +76,53 @@ router.post("/", async (req, res) => {
 
       // 🧩 Si el mensaje es texto normal
       else if (message?.type === "text") {
-        const text = message.text.body.toLowerCase().trim();
+        const text = message.text.body.trim();
+        textoRecibido = text;
 
-        // Si es el inicio de conversación
         if (session.step === "inicio") {
           session.step = "esperando_zona";
           await sendWelcomeButtons(from, name);
-        }
-
-        // Si ya está en el menú principal
-        else if (session.step === "menu_principal") {
-          if (text.includes("gracias")) {
-            await sendTextMessage(from, `Con gusto ${name} 💕 ¿Deseas ver nuestras promociones o buscar un producto?`);
-          } else if (text.includes("hola") || text.includes("buenas")) {
-            await sendTextMessage(from, `Hola ${name} 🌸 ¡Ya estás con ARBEAUTY! ¿Quieres que te muestre los productos más populares o tu rutina ideal?`);
+        } else if (session.step === "menu_principal") {
+          if (text.toLowerCase().includes("gracias")) {
+            await sendTextMessage(
+              from,
+              `Con gusto ${name} 💕 ¿Deseas ver nuestras promociones o buscar un producto?`
+            );
+          } else if (
+            text.toLowerCase().includes("hola") ||
+            text.toLowerCase().includes("buenas")
+          ) {
+            await sendTextMessage(
+              from,
+              `Hola ${name} 🌸 ¡Ya estás con ARBEAUTY! ¿Quieres que te muestre los productos más populares o tu rutina ideal?`
+            );
           } else {
-            await sendTextMessage(from, `✨ Entendido ${name}. Pronto podré reconocer productos por nombre y mostrarte precios actualizados directamente de nuestra tienda arbeautyhn.com 💖`);
+            await sendTextMessage(
+              from,
+              `✨ Entendido ${name}. Pronto podré reconocer productos por nombre y mostrarte precios actualizados directamente de nuestra tienda arbeautyhn.com 💖`
+            );
           }
         }
+      }
+
+      // 🧠 Emitir mensaje al frontend en tiempo real
+      if (textoRecibido) {
+        io.emit("nuevoMensaje", {
+          de: "cliente",
+          nombre: name,
+          telefono: from,
+          texto: textoRecibido,
+          fecha: new Date().toLocaleString("es-HN"),
+        });
       }
     }
 
     res.sendStatus(200);
   } catch (error) {
-    console.error("❌ Error procesando mensaje:", error.response?.data || error.message);
+    console.error(
+      "❌ Error procesando mensaje:",
+      error.response?.data || error.message
+    );
     res.sendStatus(500);
   }
 });
@@ -107,24 +136,28 @@ async function sendWelcomeButtons(to, name) {
     interactive: {
       type: "button",
       body: {
-        text: `💖 Hola ${name}, bienvenida a ARBEAUTY!\nEl paraíso del skincare coreano y japonés ✨🇰🇷🇯🇵\n\n🌸 Cuéntanos desde dónde nos escribes para atenderte mejor:`
+        text: `💖 Hola ${name}, bienvenida a ARBEAUTY!\nEl paraíso del skincare coreano y japonés ✨🇰🇷🇯🇵\n\n🌸 Cuéntanos desde dónde nos escribes para atenderte mejor:`,
       },
       action: {
         buttons: [
           { type: "reply", reply: { id: "sps", title: "San Pedro Sula" } },
           { type: "reply", reply: { id: "tgu", title: "Tegucigalpa" } },
-          { type: "reply", reply: { id: "otra", title: "Otra ciudad" } }
-        ]
-      }
-    }
+          { type: "reply", reply: { id: "otra", title: "Otra ciudad" } },
+        ],
+      },
+    },
   };
 
-  await axios.post(`https://graph.facebook.com/v19.0/807852259084079/messages`, body, {
-    headers: {
-      Authorization: `Bearer ${ACCESS_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-  });
+  await axios.post(
+    `https://graph.facebook.com/v19.0/807852259084079/messages`,
+    body,
+    {
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
 }
 
 // 🔹 Función: enviar texto simple
@@ -154,24 +187,28 @@ async function sendMainMenu(to, name) {
     interactive: {
       type: "button",
       body: {
-        text: `🌸 ${name}, ¿qué te gustaría hacer hoy?\n\n1️⃣ Ver productos\n2️⃣ Asesoría de rutina\n3️⃣ Promociones del día 💕`
+        text: `🌸 ${name}, ¿qué te gustaría hacer hoy?\n\n1️⃣ Ver productos\n2️⃣ Asesoría de rutina\n3️⃣ Promociones del día 💕`,
       },
       action: {
         buttons: [
           { type: "reply", reply: { id: "ver_productos", title: "Ver productos" } },
           { type: "reply", reply: { id: "asesoria", title: "Asesoría" } },
-          { type: "reply", reply: { id: "promos", title: "Promociones" } }
-        ]
-      }
-    }
+          { type: "reply", reply: { id: "promos", title: "Promociones" } },
+        ],
+      },
+    },
   };
 
-  await axios.post(`https://graph.facebook.com/v19.0/807852259084079/messages`, body, {
-    headers: {
-      Authorization: `Bearer ${ACCESS_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-  });
+  await axios.post(
+    `https://graph.facebook.com/v19.0/807852259084079/messages`,
+    body,
+    {
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
 }
 
 export default router;

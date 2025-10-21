@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARBEAUTY ChatBot - WhatsApp</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>💬 ARBEAUTY ChatBot</h1>
+    <p>Panel de mensajes de WhatsApp</p>
+  </header>
+
+  <main>
+    <section id="messages">
+      <p class="system">Esperando mensajes en tiempo real...</p>
+    </section>
+
+    <section id="reply-box">
+      <textarea id="reply" placeholder="Escribe una respuesta..."></textarea>
+      <button id="send-btn">Enviar</button>
+    </section>
+  </main>
+
+  <!-- Cliente Socket.io -->
+  <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
