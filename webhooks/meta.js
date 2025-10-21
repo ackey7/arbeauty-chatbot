@@ -4,7 +4,7 @@ const router = express.Router();
 
 // 🔹 CONFIGURACIÓN
 const VERIFY_TOKEN = "arbeauty_verify_token";
-const ACCESS_TOKEN = "TU_TOKEN_PERMANENTE"; // ⚠️ Reemplazá esto con tu token real
+const ACCESS_TOKEN = process.env.ACCESS_TOKEN; // ⚠️ Reemplazá esto con tu token real
 
 // ✅ VERIFICACIÓN DEL WEBHOOK
 router.get("/", (req, res) => {
