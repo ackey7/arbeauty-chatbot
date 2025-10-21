@@ -1,4 +1,4 @@
-// 🟣 server.js — arbeauty-chatbot
+// 🟣 server.js — arbeauty-chatbot (versión optimizada para Render)
 
 import express from "express";
 import bodyParser from "body-parser";
@@ -17,6 +17,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "*", // Puedes restringirlo luego a tu dominio frontend
+    methods: ["GET", "POST"],
   },
 });
 

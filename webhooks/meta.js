@@ -211,4 +211,57 @@ async function sendMainMenu(to, name) {
   );
 }
 
+// 🔹 Ruta para enviar mensajes manuales desde el panel web
+router.post("/enviar", async (req, res) => {
+  try {
+    const { mensaje, telefono } = req.body;
+
+    // Validar que haya texto
+    if (!mensaje) {
+      return res.status(400).json({ error: "Falta el mensaje a enviar" });
+    }
+
+    // Si no se especifica número, toma el último que escribió (última sesión activa)
+    const ultimoNumero = Object.keys(sessions).pop();
+    const numeroDestino = telefono || ultimoNumero;
+
+    if (!numeroDestino) {
+      return res.status(400).json({ error: "No hay sesión activa para enviar mensaje" });
+    }
+
+    // Enviar mensaje a WhatsApp
+    await axios.post(
+      `https://graph.facebook.com/v19.0/807852259084079/messages`,
+      {
+        messaging_product: "whatsapp",
+        to: numeroDestino,
+        text: { body: mensaje },
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${ACCESS_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    console.log(`📤 Mensaje enviado a ${numeroDestino}: ${mensaje}`);
+
+    // Emitirlo también al panel como mensaje del bot
+    const io = req.app.get("io");
+    io.emit("nuevoMensaje", {
+      de: "bot",
+      nombre: "ARBEAUTY",
+      texto: mensaje,
+      fecha: new Date().toLocaleString("es-HN"),
+    });
+
+    res.sendStatus(200);
+  } catch (error) {
+    console.error("❌ Error enviando mensaje:", error.response?.data || error.message);
+    res.status(500).json({ error: "Error enviando mensaje a WhatsApp" });
+  }
+});
+
+
 export default router;

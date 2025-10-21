@@ -44,7 +44,7 @@ function addSystemMessage(text) {
   messagesContainer.appendChild(sysMsg);
 }
 
-// ✉️ Enviar mensaje desde el panel (todavía no se manda a WhatsApp)
+// ✉️ Enviar mensaje desde el panel
 sendBtn.addEventListener("click", async () => {
   const text = replyBox.value.trim();
   if (!text) return alert("Escribe una respuesta antes de enviar.");
@@ -55,14 +55,27 @@ sendBtn.addEventListener("click", async () => {
   // Limpiar campo
   replyBox.value = "";
 
-  // (Próximo paso) Enviar mensaje al backend
+  // 🔹 Enviar mensaje al backend (POST real)
   try {
-    await fetch("https://arbeauty-chatbot.onrender.com/enviar", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mensaje: text }),
-    });
+   const response = await fetch("https://arbeauty-chatbot.onrender.com/webhooks/meta/enviar", {
+  method: "POST",
+  mode: "cors",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  body: JSON.stringify({ mensaje: text }),
+});
+
+    console.log("🔎 Respuesta del servidor:", response.status);
+
+    if (!response.ok) {
+      console.error("❌ Error del servidor al enviar mensaje");
+    } else {
+      console.log("✅ Mensaje enviado al backend correctamente");
+    }
+
   } catch (error) {
     console.error("❌ Error al enviar mensaje:", error);
   }
 });
+
