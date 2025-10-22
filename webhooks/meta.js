@@ -55,7 +55,7 @@ router.post("/", async (req, res) => {
     if (!sessions[from]) {
       sessions[from] = { step: "inicio" };
     }
-
+    sessions[from].telefono = from; // 🔹 Guarda el número del cliente en su sesión
     const session = sessions[from];
     let textoRecibido = "";
 
@@ -116,16 +116,16 @@ router.post("/", async (req, res) => {
       }
     }
 
-    // 🧠 Emitir mensaje al panel web
-    if (textoRecibido) {
-      io.emit("nuevoMensaje", {
-        de: "cliente",
-        nombre: name,
-        telefono: from,
-        texto: textoRecibido,
-        fecha: new Date().toLocaleString("es-HN"),
-      });
-    }
+ // 🧠 Emitir mensaje al panel web (texto real)
+if (message?.text?.body || textoRecibido) {
+  io.emit("nuevoMensaje", {
+    de: "cliente",
+    nombre: name,
+    telefono: from,
+    texto: message?.text?.body || textoRecibido,
+    fecha: new Date().toLocaleString("es-HN"),
+  });
+}
 
     res.sendStatus(200);
   } catch (error) {
@@ -225,18 +225,21 @@ async function sendMainMenu(to, name) {
 router.post("/enviar", async (req, res) => {
   try {
     const { mensaje, telefono } = req.body;
+
     if (!mensaje) {
       return res.status(400).json({ error: "Falta el mensaje a enviar" });
     }
 
-    const ultimoNumero = Object.keys(sessions).pop();
-    const numeroDestino = telefono || ultimoNumero;
+    // ✅ Buscar número destino en la sesión más reciente o usar el que venga en la solicitud
+    const numeroDestino =
+      telefono || Object.values(sessions).slice(-1)[0]?.telefono;
 
     if (!numeroDestino) {
       return res
         .status(400)
-        .json({ error: "No hay sesión activa para enviar mensaje" });
+        .json({ error: "No hay sesión activa o número destino" });
     }
+
 
     await axios.post(
       "https://graph.facebook.com/v19.0/807852259084079/messages",
