@@ -1,6 +1,6 @@
-// 🟣 app.js — versión mejorada ARBEAUTY 2025
+// 🟣 app.js — versión corregida (sin duplicar mensajes)
 
-const socket = io("https://arbeauty-chatbot.onrender.com"); // 🔹 Asegura conexión directa con Render
+const socket = io("https://arbeauty-chatbot.onrender.com");
 const messagesContainer = document.getElementById("messages");
 const replyInput = document.getElementById("reply");
 const sendBtn = document.getElementById("send-btn");
@@ -10,6 +10,10 @@ let ultimoTelefono = null;
 // 📩 Recibir mensajes en tiempo real
 socket.on("nuevoMensaje", (msg) => {
   if (msg.telefono) ultimoTelefono = msg.telefono;
+
+  // Evita mostrar mensajes del bot duplicados (ya los mostramos localmente)
+  if (msg.de === "bot" && msg.local) return;
+
   mostrarMensaje(msg);
 });
 
@@ -22,17 +26,18 @@ function mostrarMensaje({ de, nombre, texto, fecha }) {
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// 📤 Enviar mensaje al cliente desde el panel
+// 📤 Enviar mensaje desde el panel
 sendBtn.addEventListener("click", async () => {
   const mensaje = replyInput.value.trim();
   if (!mensaje) return;
 
-  // Mostrar en el panel instantáneamente
+  // 📍 Mostrar localmente solo una vez (con bandera local)
   mostrarMensaje({
     de: "bot",
     nombre: "ARBEAUTY",
     texto: mensaje,
     fecha: new Date().toLocaleString("es-HN"),
+    local: true,
   });
 
   replyInput.value = "";
@@ -43,7 +48,7 @@ sendBtn.addEventListener("click", async () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         mensaje,
-        telefono: ultimoTelefono, // 🔹 Se asegura que se use el último número activo
+        telefono: ultimoTelefono,
       }),
     });
 
