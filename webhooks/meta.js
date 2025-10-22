@@ -1,267 +1,118 @@
-// 🟣 meta.js — arbeauty-chatbot (v19 stable)
+// 🟣 meta.js — arbeauty chatbot oficial
 
 import express from "express";
 import axios from "axios";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const router = express.Router();
 
 // 🔹 CONFIGURACIONES
-const VERIFY_TOKEN = "arbeauty_verify_token";
+const VERIFY_TOKEN = process.env.VERIFY_TOKEN;
 const ACCESS_TOKEN = process.env.ACCESS_TOKEN;
 
-// 🔹 Memoria temporal para sesiones (por número)
-const sessions = {};
+// 🔹 CONEXIÓN A MONGODB
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+.then(() => console.log("✅ Conectado a MongoDB Atlas"))
+.catch(err => console.error("❌ Error conectando a MongoDB:", err));
 
-// 🔹 Verificación del webhook de Meta
+// 🔹 MODELO DE SESIÓN
+const sessionSchema = new mongoose.Schema({
+  telefono: { type: String, unique: true },
+  step: { type: String, default: "inicio" },
+  ciudad: { type: String, default: null },
+  datos: { type: Object, default: {} },
+});
+
+const Session = mongoose.model("Session", sessionSchema);
+
+// 🔹 VERIFICACIÓN WEBHOOK
 router.get("/", (req, res) => {
   const mode = req.query["hub.mode"];
   const token = req.query["hub.verify_token"];
   const challenge = req.query["hub.challenge"];
 
   if (mode && token === VERIFY_TOKEN) {
-    console.log("✅ Webhook verificado correctamente en Render");
+    console.log("✅ Webhook verificado correctamente");
     res.status(200).send(challenge);
   } else {
     res.sendStatus(403);
   }
 });
 
-// 🔹 Procesamiento de mensajes entrantes
+// 🔹 RECEPCIÓN DE MENSAJES
 router.post("/", async (req, res) => {
   try {
-    const data = req.body;
-    const io = req.app.get("io");
+    const body = req.body;
 
-    if (!data.entry || !data.entry[0]?.changes) return res.sendStatus(200);
+    if (body.object) {
+      const entry = body.entry?.[0];
+      const changes = entry?.changes?.[0];
+      const message = changes?.value?.messages?.[0];
 
-    const change = data.entry[0].changes[0];
-    const value = change?.value || {};
-    const message = value?.messages?.[0];
-    const from = message?.from;
-    const name = value?.contacts?.[0]?.profile?.name || "bella";
+      if (message) {
+        const from = message.from;
+        const texto = message.text?.body?.trim() || "";
+        console.log(`📩 Mensaje recibido de ${from}: ${texto}`);
 
-    if (!message || !from) return res.sendStatus(200);
+        let session = await Session.findOne({ telefono: from });
+        if (!session) {
+          session = await Session.create({ telefono: from });
+        }
 
-    console.log("📦 WEBHOOK RECIBIDO:", message);
+        // Lógica del flujo principal
+        if (session.step === "inicio") {
+          await enviarMensaje(from, "👋 ¡Hola! Soy el asistente de *arbeauty* 💖\n¿De qué ciudad nos escribes?\n\n1️⃣ San Pedro Sula\n2️⃣ Tegucigalpa\n3️⃣ Otra zona de Honduras");
+          session.step = "esperando_ciudad";
+          await session.save();
+        } 
+        else if (session.step === "esperando_ciudad") {
+          if (texto === "1") {
+            session.ciudad = "SPS";
+            session.step = "ciudad_confirmada";
+            await enviarMensaje(from, "📍 ¡Perfecto! Te atenderemos desde *San Pedro Sula* ❤️");
+          } else if (texto === "2") {
+            session.ciudad = "TGU";
+            session.step = "ciudad_confirmada";
+            await enviarMensaje(from, "📍 ¡Perfecto! Te atenderemos desde *Tegucigalpa* 💕");
+          } else {
+            session.ciudad = "OTRA";
+            session.step = "ciudad_confirmada";
+            await enviarMensaje(from, "✨ Gracias, te atenderemos desde la central de *arbeauty* 🌸");
+          }
+          await session.save();
 
-    // 🧠 Evitar eco del bot
-    const BOT_NUMBER_ID = "50488432478"; // Tu número de bot sin '+'
-    if (from === BOT_NUMBER_ID) {
-      console.log("🧩 Ignorado mensaje propio (eco del bot)");
-      return res.sendStatus(200);
-    }
+          await clasificarChat(from, session.ciudad);
 
-    // Crear sesión si no existe
-    if (!sessions[from]) {
-      sessions[from] = { step: "inicio" };
-    }
-
-    // Guardar número de teléfono y preparar mensaje
-    sessions[from].telefono = from;
-    const session = sessions[from];
-    let textoRecibido = "";
-
-    // 🧩 Si el mensaje viene de un botón interactivo
-    if (message?.interactive?.button_reply?.id) {
-      const selected = message.interactive.button_reply.id;
-
-      if (session.step === "esperando_zona") {
-        let ciudad = "";
-
-        if (selected === "sps") ciudad = "San Pedro Sula";
-        else if (selected === "tgu") ciudad = "Tegucigalpa";
-        else ciudad = "Otra ciudad";
-
-        session.ciudad = ciudad;
-        session.step = "menu_principal";
-
-        textoRecibido = `📍 ${name} seleccionó: ${ciudad}`;
-
-        await sendTextMessage(
-          from,
-          `Perfecto ${name} 💖, te atenderemos desde nuestra sucursal de ${ciudad}.`
-        );
-
-        setTimeout(async () => {
-          await sendMainMenu(from, name);
-        }, 1500);
-      }
-    }
-
-    // 🧩 Si el mensaje es texto normal
-    else if (message?.type === "text") {
-      textoRecibido = message.text.body.trim();
-
-      if (session.step === "inicio") {
-        session.step = "esperando_zona";
-        await sendWelcomeButtons(from, name);
-      } else if (session.step === "menu_principal") {
-        if (textoRecibido.toLowerCase().includes("gracias")) {
-          await sendTextMessage(
-            from,
-            `Con gusto ${name} 💕 ¿Deseas ver nuestras promociones o buscar un producto?`
-          );
-        } else if (
-          textoRecibido.toLowerCase().includes("hola") ||
-          textoRecibido.toLowerCase().includes("buenas")
-        ) {
-          await sendTextMessage(
-            from,
-            `Hola ${name} 🌸 ¡Ya estás con ARBEAUTY! ¿Quieres que te muestre los productos más populares o tu rutina ideal?`
-          );
-        } else {
-          await sendTextMessage(
-            from,
-            `✨ Entendido ${name}. Pronto podré reconocer productos por nombre y mostrarte precios actualizados directamente de nuestra tienda arbeautyhn.com 💖`
-          );
+        } 
+        else if (session.step === "ciudad_confirmada") {
+          await enviarMensaje(from, "💬 Gracias por escribirnos 💖\nEn breve uno de nuestros asesores de *arbeauty* te atenderá personalmente.");
         }
       }
     }
 
-  // 🧠 Emitir mensaje al panel web (texto real y con ciudad)
-const textoFinal = message?.text?.body || textoRecibido || "";
-if (textoFinal.trim() !== "") {
-  const ciudad = session.ciudad || "Sin clasificar";
-
-  console.log("📢 Enviando al panel:", {
-    nombre: name,
-    telefono: from,
-    ciudad,
-    texto: textoFinal,
-  });
-
-  io.emit("nuevoMensaje", {
-    de: "cliente",
-    nombre: name,
-    telefono: from,
-    ciudad,
-    texto: textoFinal,
-    fecha: new Date().toLocaleString("es-HN"),
-  });
-} else {
-  console.log("⚠️ Mensaje vacío, no se emitió al panel");
-}
-
     res.sendStatus(200);
-  } catch (error) {
-    console.error(
-      "❌ Error procesando mensaje:",
-      error.response?.data || error.message
-    );
+  } catch (err) {
+    console.error("❌ Error procesando el mensaje:", err);
     res.sendStatus(500);
   }
 });
 
-// 🔹 Enviar mensaje con botones de bienvenida
-async function sendWelcomeButtons(to, name) {
-  const body = {
-    messaging_product: "whatsapp",
-    to,
-    type: "interactive",
-    interactive: {
-      type: "button",
-      body: {
-        text: `💖 Hola ${name}, bienvenida a ARBEAUTY!\nEl paraíso del skincare coreano y japonés ✨🇰🇷🇯🇵\n\n🌸 Cuéntanos desde dónde nos escribes para atenderte mejor:`,
-      },
-      action: {
-        buttons: [
-          { type: "reply", reply: { id: "sps", title: "San Pedro Sula" } },
-          { type: "reply", reply: { id: "tgu", title: "Tegucigalpa" } },
-          { type: "reply", reply: { id: "otra", title: "Otra ciudad" } },
-        ],
-      },
-    },
-  };
-
-  await axios.post(
-    "https://graph.facebook.com/v19.0/807852259084079/messages",
-    body,
-    {
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
-}
-
-// 🔹 Enviar texto simple
-async function sendTextMessage(to, text) {
-  await axios.post(
-    "https://graph.facebook.com/v19.0/807852259084079/messages",
-    {
-      messaging_product: "whatsapp",
-      to,
-      text: { body: text },
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
-}
-
-// 🔹 Enviar menú principal
-async function sendMainMenu(to, name) {
-  const body = {
-    messaging_product: "whatsapp",
-    to,
-    type: "interactive",
-    interactive: {
-      type: "button",
-      body: {
-        text: `🌸 ${name}, ¿qué te gustaría hacer hoy?\n\n1️⃣ Ver productos\n2️⃣ Asesoría de rutina\n3️⃣ Promociones del día 💕`,
-      },
-      action: {
-        buttons: [
-          { type: "reply", reply: { id: "ver_productos", title: "Ver productos" } },
-          { type: "reply", reply: { id: "asesoria", title: "Asesoría" } },
-          { type: "reply", reply: { id: "promos", title: "Promociones" } },
-        ],
-      },
-    },
-  };
-
-  await axios.post(
-    "https://graph.facebook.com/v19.0/807852259084079/messages",
-    body,
-    {
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
-}
-
-// 🔹 Enviar mensaje manual desde el panel
-router.post("/enviar", async (req, res) => {
+// 🔹 FUNCIÓN PARA ENVIAR MENSAJES
+async function enviarMensaje(to, body) {
   try {
-    const { mensaje, telefono } = req.body;
-
-    if (!mensaje) {
-      return res.status(400).json({ error: "Falta el mensaje a enviar" });
-    }
-
-    // ✅ Buscar número destino en la sesión más reciente o usar el que venga en la solicitud
-    const numeroDestino =
-      telefono || Object.values(sessions).slice(-1)[0]?.telefono;
-
-    if (!numeroDestino) {
-      return res
-        .status(400)
-        .json({ error: "No hay sesión activa o número destino" });
-    }
-
-
     await axios.post(
-      "https://graph.facebook.com/v19.0/807852259084079/messages",
+      `https://graph.facebook.com/v17.0/807852259084079/messages`,
       {
         messaging_product: "whatsapp",
-        to: numeroDestino,
-        text: { body: mensaje },
+        to,
+        type: "text",
+        text: { body },
       },
       {
         headers: {
@@ -270,25 +121,34 @@ router.post("/enviar", async (req, res) => {
         },
       }
     );
-
-    console.log(`📤 Mensaje enviado a ${numeroDestino}: ${mensaje}`);
-
-    const io = req.app.get("io");
-    io.emit("nuevoMensaje", {
-      de: "bot",
-      nombre: "ARBEAUTY",
-      texto: mensaje,
-      fecha: new Date().toLocaleString("es-HN"),
-    });
-
-    res.sendStatus(200);
+    console.log(`💬 Mensaje enviado a ${to}: ${body}`);
   } catch (error) {
-    console.error(
-      "❌ Error enviando mensaje:",
-      error.response?.data || error.message
-    );
-    res.status(500).json({ error: "Error enviando mensaje a WhatsApp" });
+    console.error("⚠️ Error enviando mensaje:", error.response?.data || error.message);
   }
-});
+}
+
+// 🔹 FUNCIÓN PARA CLASIFICAR CHAT EN EL PANEL
+async function clasificarChat(telefono, ciudad) {
+  try {
+    // Mapeamos la ciudad según el código
+    const pestaña =
+      ciudad === "SPS"
+        ? "san-pedro-sula"
+        : ciudad === "TGU"
+        ? "tegucigalpa"
+        : "sin-clasificar";
+
+    // 🔸 URL del endpoint de tu panel (ajústala si usás otro dominio)
+    const url = `https://panel.arbeauty.com/api/chats/clasificar`;
+
+    // Enviamos la actualización al panel
+    await axios.post(url, { telefono, pestaña });
+
+    console.log(`📁 Chat ${telefono} movido a la pestaña: ${pestaña}`);
+  } catch (err) {
+    console.error("⚠️ Error clasificando chat:", err.response?.data || err.message);
+  }
+}
+
 
 export default router;

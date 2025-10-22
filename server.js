@@ -48,6 +48,24 @@ io.on("connection", (socket) => {
 // 🔹 Conectar el router de Meta (WhatsApp Webhook)
 app.use("/webhooks/meta", metaRouter);
 
+// 🟣 Alias adicional para compatibilidad con la verificación de Meta
+app.use("/webhook", (req, res, next) => {
+  if (req.method === "GET") {
+    const mode = req.query["hub.mode"];
+    const token = req.query["hub.verify_token"];
+    const challenge = req.query["hub.challenge"];
+
+    if (mode && token === "arbeauty_verify_token") {
+      console.log("✅ Webhook verificado correctamente (alias)");
+      return res.status(200).send(challenge);
+    } else {
+      return res.sendStatus(403);
+    }
+  } else {
+    next();
+  }
+});
+
 // ===========================================================
 // 🟣 🔹 NUEVA SECCIÓN: Servir el frontend (panel web)
 // ===========================================================
