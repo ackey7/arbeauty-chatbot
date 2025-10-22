@@ -3,13 +3,125 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARBEAUTY ChatBot - WhatsApp</title>
+  <title>💬 ARBEAUTY ChatBot - Panel WhatsApp</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      margin: 0;
+      background: #fff5fb;
+      color: #444;
+    }
+
+    header {
+      background: linear-gradient(90deg, #fbb6ce, #f9a8d4);
+      color: #fff;
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      margin: 0;
+    }
+
+    header button {
+      background: #fff;
+      color: #e35fa1;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    header button:hover {
+      background: #ffe6f1;
+    }
+
+    main {
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+
+    #messages {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      height: 60vh;
+      overflow-y: auto;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+
+    .message {
+      margin: 8px 0;
+      padding: 10px 15px;
+      border-radius: 10px;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+
+    .cliente {
+      background: #f3f3f3;
+      align-self: flex-start;
+    }
+
+    .bot {
+      background: #e35fa1;
+      color: white;
+      align-self: flex-end;
+      margin-left: auto;
+    }
+
+    #reply-box {
+      display: flex;
+      margin-top: 15px;
+      gap: 10px;
+    }
+
+    textarea {
+      flex: 1;
+      resize: none;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-family: inherit;
+    }
+
+    button#send-btn {
+      background: #e35fa1;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button#send-btn:hover {
+      background: #d24e91;
+    }
+  </style>
 </head>
 <body>
+
+  <!-- 🟣 Protección de acceso -->
+  <script>
+    // Si no hay sesión activa, redirige al login
+    if (localStorage.getItem("loggedIn") !== "true") {
+      window.location.href = "login.html";
+    }
+  </script>
+  <!-- 🟣 Fin protección -->
+
   <header>
-    <h1>💬 ARBEAUTY ChatBot</h1>
-    <p>Panel de mensajes de WhatsApp</p>
+    <h1>💬 Panel ARBEAUTY ChatBot</h1>
+    <button onclick="logout()">Cerrar sesión</button>
   </header>
 
   <main>
@@ -26,5 +138,14 @@
   <!-- Cliente Socket.io -->
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <script src="app.js"></script>
+
+  <!-- 🩷 Script de logout -->
+  <script>
+    function logout() {
+      localStorage.removeItem("loggedIn");
+      window.location.href = "login.html";
+    }
+  </script>
 </body>
 </html>
+
