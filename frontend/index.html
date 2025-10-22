@@ -1,126 +1,208 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>💬 ARBEAUTY ChatBot - Panel WhatsApp</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💬 ARBEAUTY ChatBot - Panel</title>
+
+  <!-- Fuentes -->
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600&display=swap" rel="stylesheet" />
+
   <style>
-    body {
-      font-family: "Poppins", sans-serif;
-      margin: 0;
-      background: #fff5fb;
-      color: #444;
+    :root {
+      --rosa-principal: #ffa6a4;
+      --rosa-claro: #ffe6e1;
+      --lavanda: #bbb8ff;
+      --blanco: #ffffff;
+      --texto: #4a4a4a;
     }
 
+    * {
+      box-sizing: border-box;
+      font-family: "Raleway", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--rosa-claro);
+      color: var(--texto);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* Encabezado */
     header {
-      background: linear-gradient(90deg, #fbb6ce, #f9a8d4);
-      color: #fff;
-      padding: 20px;
+      background: linear-gradient(90deg, var(--rosa-principal), var(--lavanda));
+      color: var(--blanco);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 20px 40px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
     }
 
     header h1 {
-      font-size: 1.4rem;
       margin: 0;
+      font-weight: 600;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    header h1 span {
+      font-size: 1.6rem;
+      color: var(--lavanda);
     }
 
     header button {
-      background: #fff;
-      color: #e35fa1;
+      background: var(--blanco);
       border: none;
+      color: var(--rosa-principal);
       padding: 8px 16px;
-      border-radius: 8px;
-      font-weight: bold;
+      border-radius: 10px;
+      font-weight: 600;
       cursor: pointer;
-      transition: background 0.2s;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 6px rgba(255, 166, 164, 0.2);
     }
 
     header button:hover {
-      background: #ffe6f1;
+      background: #fff0f0;
+      transform: scale(1.03);
     }
 
+    /* Área principal */
     main {
-      padding: 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
       max-width: 800px;
-      margin: auto;
+      margin: 25px auto;
+      background: var(--blanco);
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(255, 166, 164, 0.2);
+      padding: 20px 25px;
+      overflow: hidden;
     }
 
+    /* Mensajes */
     #messages {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      height: 60vh;
+      flex: 1;
       overflow-y: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      padding-right: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      scroll-behavior: smooth;
     }
 
     .message {
-      margin: 8px 0;
-      padding: 10px 15px;
-      border-radius: 10px;
-      max-width: 70%;
-      word-wrap: break-word;
+      padding: 12px 16px;
+      border-radius: 15px;
+      max-width: 75%;
+      line-height: 1.4;
+      font-size: 0.95rem;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+      animation: fadeInUp 0.3s ease;
     }
 
     .cliente {
-      background: #f3f3f3;
+      background: #f9f9f9;
       align-self: flex-start;
     }
 
     .bot {
-      background: #e35fa1;
-      color: white;
+      background: var(--rosa-principal);
+      color: var(--blanco);
       align-self: flex-end;
-      margin-left: auto;
     }
 
+    .system {
+      text-align: center;
+      color: #888;
+      font-size: 0.9rem;
+      margin-top: 20px;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(5px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Caja de respuesta */
     #reply-box {
       display: flex;
-      margin-top: 15px;
+      align-items: center;
       gap: 10px;
+      margin-top: 15px;
     }
 
     textarea {
       flex: 1;
       resize: none;
-      padding: 10px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      font-family: inherit;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      padding: 12px;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border 0.2s;
     }
 
-    button#send-btn {
-      background: #e35fa1;
+    textarea:focus {
+      border: 1px solid var(--rosa-principal);
+      box-shadow: 0 0 4px rgba(255, 166, 164, 0.3);
+    }
+
+    #send-btn {
+      background: linear-gradient(90deg, var(--rosa-principal), var(--lavanda));
+      color: var(--blanco);
       border: none;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 10px;
+      border-radius: 12px;
+      padding: 12px 24px;
+      font-weight: 600;
       cursor: pointer;
-      font-weight: bold;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 4px 10px rgba(255, 166, 164, 0.3);
     }
 
-    button#send-btn:hover {
-      background: #d24e91;
+    #send-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 14px rgba(255, 166, 164, 0.4);
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #999;
+      margin-top: 10px;
+    }
+
+    footer span {
+      color: var(--rosa-principal);
+      font-weight: 600;
     }
   </style>
 </head>
-<body>
 
-  <!-- 🟣 Protección de acceso -->
+<body>
+  <!-- 🔐 Protección de acceso -->
   <script>
-    // Si no hay sesión activa, redirige al login
     if (localStorage.getItem("loggedIn") !== "true") {
       window.location.href = "login.html";
     }
   </script>
-  <!-- 🟣 Fin protección -->
 
+  <!-- 🩷 Header -->
   <header>
-    <h1>💬 Panel ARBEAUTY ChatBot</h1>
+    <h1><span>✦</span> ARBEAUTY Panel</h1>
     <button onclick="logout()">Cerrar sesión</button>
   </header>
 
@@ -135,11 +217,12 @@
     </section>
   </main>
 
-  <!-- Cliente Socket.io -->
+  <footer>© <span>ARBEAUTY</span> 2025 · Todos los derechos reservados</footer>
+
+  <!-- Socket.io -->
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <script src="app.js"></script>
 
-  <!-- 🩷 Script de logout -->
   <script>
     function logout() {
       localStorage.removeItem("loggedIn");
@@ -148,4 +231,3 @@
   </script>
 </body>
 </html>
-
