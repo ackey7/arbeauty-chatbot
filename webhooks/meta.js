@@ -39,6 +39,13 @@ router.post("/", async (req, res) => {
 
       if (!message) return res.sendStatus(200); // ignorar mensajes vacíos
 
+      // 🧠 Evitar duplicados (mensajes enviados por el mismo bot)
+      const BOT_NUMBER_ID = "50487497304"; // <-- coloca aquí tu número de teléfono del bot (sin +)
+      if (from === BOT_NUMBER_ID) {
+        console.log("🧩 Ignorado mensaje propio (eco del bot)");
+        return res.sendStatus(200);
+      }
+
       // Si no hay sesión previa, la creamos
       if (!sessions[from]) {
         sessions[from] = { step: "inicio" };
