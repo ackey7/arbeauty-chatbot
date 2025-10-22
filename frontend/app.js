@@ -1,4 +1,4 @@
-// 🟣 app.js — ARBEAUTY CRM Avanzado con pestañas por ciudad
+// 🟣 app.js — ARBEAUTY CRM Avanzado con pestañas por ciudad y persistencia total
 
 const socket = io("https://arbeauty-chatbot.onrender.com");
 const chatList = document.getElementById("chat-list");
@@ -10,8 +10,17 @@ const tabButtons = document.querySelectorAll(".tabs button");
 
 // 🔹 Persistencia local de chats (localStorage)
 let chats = JSON.parse(localStorage.getItem("arbeautyChats")) || {}; // Carga previa si existe
+
+// 🧠 Asegurarse que todos los chats tengan su ciudad asignada
+Object.keys(chats).forEach((tel) => {
+  if (!chats[tel].ciudad) {
+    chats[tel].ciudad = "Sin clasificar";
+  }
+});
+
 let currentChat = null;
-let activeCity = "San Pedro Sula";
+// 🔹 Restaurar pestaña activa guardada o default "San Pedro Sula"
+let activeCity = localStorage.getItem("arbeautyActiveCity") || "San Pedro Sula";
 
 // 📩 Recibir mensajes en tiempo real
 socket.on("nuevoMensaje", (msg) => {
@@ -31,8 +40,6 @@ socket.on("nuevoMensaje", (msg) => {
   renderChatList();
   if (currentChat === telefono) renderMessages(telefono);
 });
-
-
 
 // 📋 Renderizar lista de chats
 function renderChatList() {
@@ -62,6 +69,10 @@ tabButtons.forEach((btn) => {
     tabButtons.forEach((b) => b.classList.remove("active"));
     btn.classList.add("active");
     activeCity = btn.dataset.city;
+
+    // 💾 Guardar pestaña activa
+    localStorage.setItem("arbeautyActiveCity", activeCity);
+
     renderChatList();
   });
 });
@@ -73,6 +84,10 @@ function openChat(telefono) {
   chatHeader.innerHTML = `<h2>${chat.nombre} · <small>${chat.ciudad}</small></h2>`;
   replyInput.disabled = false;
   sendBtn.disabled = false;
+
+  // 💾 Guardar último chat abierto
+  localStorage.setItem("arbeautyLastChat", telefono);
+
   renderMessages(telefono);
 }
 
@@ -103,7 +118,6 @@ sendBtn.addEventListener("click", async () => {
   localStorage.setItem("arbeautyChats", JSON.stringify(chats));
 
   renderMessages(currentChat);
-
   replyInput.value = "";
 
   try {
@@ -119,3 +133,30 @@ sendBtn.addEventListener("click", async () => {
     console.error("Error enviando:", err);
   }
 });
+
+// 🪄 Restaurar pestaña activa, chats y último chat al recargar
+window.addEventListener("load", () => {
+  // Restaurar pestaña activa (guardada en localStorage)
+  tabButtons.forEach((btn) => {
+    if (btn.dataset.city === activeCity) {
+      btn.classList.add("active");
+    } else {
+      btn.classList.remove("active");
+    }
+  });
+
+  // Restaurar chats desde localStorage
+  if (Object.keys(chats).length > 0) {
+    console.log("💾 Restaurando chats guardados:", chats);
+    renderChatList();
+
+    // 🔹 Si había un chat abierto, restaurarlo automáticamente
+    const lastChat = localStorage.getItem("arbeautyLastChat");
+    if (lastChat && chats[lastChat]) {
+      openChat(lastChat);
+    }
+  } else {
+    console.log("⚠️ No hay chats guardados localmente aún.");
+  }
+});
+
