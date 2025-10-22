@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>💬 ARBEAUTY ChatBot - Panel</title>
+  <title>💬 ARBEAUTY CRM Panel</title>
 
-  <!-- Fuentes -->
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600&display=swap" rel="stylesheet" />
 
   <style>
@@ -15,12 +14,10 @@
       --lavanda: #bbb8ff;
       --blanco: #ffffff;
       --texto: #4a4a4a;
+      --gris: #f7f7f7;
     }
 
-    * {
-      box-sizing: border-box;
-      font-family: "Raleway", sans-serif;
-    }
+    * { box-sizing: border-box; font-family: "Raleway", sans-serif; }
 
     body {
       margin: 0;
@@ -31,35 +28,26 @@
       height: 100vh;
     }
 
-    /* Encabezado */
     header {
       background: linear-gradient(90deg, var(--rosa-principal), var(--lavanda));
       color: var(--blanco);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 15px 35px;
+      padding: 12px 25px;
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
     }
 
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
     .logo img {
-      height: 45px;
+      height: 40px;
       width: auto;
-      user-select: none;
-      -webkit-user-drag: none;
     }
 
     header button {
       background: var(--blanco);
       border: none;
       color: var(--rosa-principal);
-      padding: 8px 16px;
+      padding: 7px 15px;
       border-radius: 10px;
       font-weight: 600;
       cursor: pointer;
@@ -72,134 +60,155 @@
       transform: scale(1.03);
     }
 
-    /* Área principal */
     main {
       flex: 1;
       display: flex;
-      flex-direction: column;
-      max-width: 800px;
-      margin: 25px auto;
-      background: var(--blanco);
-      border-radius: 20px;
-      box-shadow: 0 10px 25px rgba(255, 166, 164, 0.2);
-      padding: 20px 25px;
       overflow: hidden;
     }
 
-    /* Mensajes */
-    #messages {
-      flex: 1;
-      overflow-y: auto;
-      padding-right: 10px;
+    /* 📂 Sidebar izquierda */
+    .sidebar {
+      width: 320px;
+      background: var(--blanco);
+      border-right: 1px solid #eee;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      scroll-behavior: smooth;
     }
 
-    .message {
-      padding: 12px 16px;
-      border-radius: 15px;
-      max-width: 75%;
-      line-height: 1.4;
-      font-size: 0.95rem;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-      animation: fadeInUp 0.3s ease;
+    .tabs {
+      display: flex;
+      justify-content: space-around;
+      border-bottom: 1px solid #ddd;
+      background: var(--gris);
     }
 
-    .cliente {
-      background: #f9f9f9;
-      align-self: flex-start;
+    .tabs button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-weight: 600;
+      color: #777;
+      transition: all 0.2s;
     }
 
-    .bot {
-      background: var(--rosa-principal);
-      color: var(--blanco);
-      align-self: flex-end;
+    .tabs button.active {
+      color: var(--rosa-principal);
+      border-bottom: 3px solid var(--rosa-principal);
     }
 
-    .system {
-      text-align: center;
-      color: #888;
-      font-size: 0.9rem;
-      margin-top: 20px;
+    .chat-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
     }
 
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(5px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .chat-item {
+      padding: 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      flex-direction: column;
+      border-bottom: 1px solid #f0f0f0;
     }
 
-    /* Caja de respuesta */
-    #reply-box {
+    .chat-item:hover { background: #fff3f5; }
+
+    .chat-item .name { font-weight: 600; color: var(--texto); }
+    .chat-item .preview { font-size: 0.9rem; color: #777; margin-top: 4px; }
+    .chat-item .city { font-size: 0.8rem; color: var(--rosa-principal); margin-top: 4px; }
+
+    /* 💬 Chat derecha */
+    .chat-window {
+      flex: 1;
+      background: var(--blanco);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-header {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+      background: var(--gris);
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-top: 15px;
+    }
+
+    .chat-header h2 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--rosa-principal);
+    }
+
+    .messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .message {
+      padding: 10px 14px;
+      border-radius: 14px;
+      max-width: 70%;
+      font-size: 0.95rem;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .cliente { background: #f7f7f7; align-self: flex-start; }
+    .bot { background: var(--rosa-principal); color: var(--blanco); align-self: flex-end; }
+
+    .input-box {
+      display: flex;
+      gap: 10px;
+      padding: 12px 20px;
+      border-top: 1px solid #eee;
     }
 
     textarea {
       flex: 1;
       resize: none;
-      border-radius: 12px;
+      border-radius: 10px;
       border: 1px solid #ddd;
-      padding: 12px;
+      padding: 10px;
       font-size: 0.95rem;
       outline: none;
-      transition: border 0.2s;
     }
 
-    textarea:focus {
-      border: 1px solid var(--rosa-principal);
-      box-shadow: 0 0 4px rgba(255, 166, 164, 0.3);
-    }
-
-    #send-btn {
+    button#send-btn {
       background: linear-gradient(90deg, var(--rosa-principal), var(--lavanda));
-      color: var(--blanco);
       border: none;
-      border-radius: 12px;
-      padding: 12px 24px;
+      color: white;
+      border-radius: 10px;
+      padding: 10px 18px;
       font-weight: 600;
       cursor: pointer;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      box-shadow: 0 4px 10px rgba(255, 166, 164, 0.3);
+      transition: all 0.2s ease;
     }
 
-    #send-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 14px rgba(255, 166, 164, 0.4);
-    }
+    button#send-btn:hover { transform: scale(1.05); }
 
-    footer {
-      text-align: center;
-      font-size: 0.8rem;
-      color: #999;
-      margin-top: 10px;
-    }
-
-    footer span {
-      color: var(--rosa-principal);
-      font-weight: 600;
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 
 <body>
-  <!-- 🔐 Protección de acceso -->
+  <!-- 🔐 Protección de sesión -->
   <script>
     if (localStorage.getItem("loggedIn") !== "true") {
       window.location.href = "login.html";
     }
   </script>
 
-  <!-- 🩷 Header con logo -->
+  <!-- Header -->
   <header>
     <div class="logo">
       <img src="assets/logo-arbeauty.png" alt="Logo ARBEAUTY" />
@@ -207,20 +216,32 @@
     <button onclick="logout()">Cerrar sesión</button>
   </header>
 
+  <!-- Panel -->
   <main>
-    <section id="messages">
-      <p class="system">Esperando mensajes en tiempo real...</p>
-    </section>
+    <aside class="sidebar">
+      <div class="tabs">
+        <button class="active" data-city="San Pedro Sula">SPS</button>
+        <button data-city="Tegucigalpa">TGU</button>
+        <button data-city="Otra ciudad">Otras</button>
+        <button data-city="Sin clasificar">Sin clasificar</button>
+      </div>
+      <div class="chat-list" id="chat-list"></div>
+    </aside>
 
-    <section id="reply-box">
-      <textarea id="reply" placeholder="Escribe una respuesta..."></textarea>
-      <button id="send-btn">Enviar</button>
+    <section class="chat-window">
+      <div class="chat-header" id="chat-header">
+        <h2>Selecciona un chat</h2>
+      </div>
+      <div class="messages" id="messages">
+        <p style="text-align:center;color:#aaa;">Ningún chat seleccionado</p>
+      </div>
+      <div class="input-box">
+        <textarea id="reply" placeholder="Escribe un mensaje..." disabled></textarea>
+        <button id="send-btn" disabled>Enviar</button>
+      </div>
     </section>
   </main>
 
-  <footer>© <span>ARBEAUTY</span> 2025 · Todos los derechos reservados</footer>
-
-  <!-- Socket.io -->
   <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
   <script src="app.js"></script>
 
