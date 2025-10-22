@@ -1,81 +1,58 @@
-// 🟣 app.js — Versión final con Socket.io y tu diseño
+// 🟣 app.js — versión mejorada ARBEAUTY 2025
 
-// Conexión al servidor backend (Render)
-const socket = io("https://arbeauty-chatbot.onrender.com"); // <-- reemplaza con tu URL si es diferente
-
-// Elementos del DOM
+const socket = io("https://arbeauty-chatbot.onrender.com"); // 🔹 Asegura conexión directa con Render
 const messagesContainer = document.getElementById("messages");
-const replyBox = document.getElementById("reply");
+const replyInput = document.getElementById("reply");
 const sendBtn = document.getElementById("send-btn");
 
-// 🟢 Confirmar conexión al servidor
-socket.on("connect", () => {
-  console.log("✅ Conectado al servidor en tiempo real");
-  addSystemMessage("Conectado al servidor en tiempo real ✅");
-});
+let ultimoTelefono = null;
 
-// 📩 Escuchar mensajes entrantes desde WhatsApp
+// 📩 Recibir mensajes en tiempo real
 socket.on("nuevoMensaje", (msg) => {
-  console.log("📩 Mensaje recibido:", msg);
-  addMessage(msg.texto, "client", msg.nombre, msg.telefono, msg.fecha);
+  if (msg.telefono) ultimoTelefono = msg.telefono;
+  mostrarMensaje(msg);
 });
 
-// 🧩 Función para agregar mensajes visuales al panel
-function addMessage(text, sender = "client", name = "", phone = "", time = "") {
-  const msgDiv = document.createElement("div");
-  msgDiv.classList.add("message", sender);
-
-  msgDiv.innerHTML = `
-    <strong>${name || "Desconocido"}</strong> 
-    <small>${phone || ""}</small><br>
-    <span>${text}</span><br>
-    <small style="color:#999;">${time || new Date().toLocaleString("es-HN")}</small>
-  `;
-
-  messagesContainer.appendChild(msgDiv);
+// 🧾 Mostrar mensajes en el panel
+function mostrarMensaje({ de, nombre, texto, fecha }) {
+  const msg = document.createElement("div");
+  msg.classList.add("message", de === "bot" ? "bot" : "cliente");
+  msg.innerHTML = `<strong>${nombre}</strong><br>${texto}<br><small>${fecha}</small>`;
+  messagesContainer.appendChild(msg);
   messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
 
-// 🧠 Mensajes del sistema (como “conectado”, “esperando datos”)
-function addSystemMessage(text) {
-  const sysMsg = document.createElement("p");
-  sysMsg.classList.add("system");
-  sysMsg.textContent = text;
-  messagesContainer.appendChild(sysMsg);
-}
-
-// ✉️ Enviar mensaje desde el panel
+// 📤 Enviar mensaje al cliente desde el panel
 sendBtn.addEventListener("click", async () => {
-  const text = replyBox.value.trim();
-  if (!text) return alert("Escribe una respuesta antes de enviar.");
+  const mensaje = replyInput.value.trim();
+  if (!mensaje) return;
 
-  // Mostrar mensaje localmente (bot)
-  addMessage(text, "bot", "ARBEAUTY");
+  // Mostrar en el panel instantáneamente
+  mostrarMensaje({
+    de: "bot",
+    nombre: "ARBEAUTY",
+    texto: mensaje,
+    fecha: new Date().toLocaleString("es-HN"),
+  });
 
-  // Limpiar campo
-  replyBox.value = "";
+  replyInput.value = "";
 
-  // 🔹 Enviar mensaje al backend (POST real)
   try {
-   const response = await fetch("https://arbeauty-chatbot.onrender.com/webhooks/meta/enviar", {
-  method: "POST",
-  mode: "cors",
-  headers: {
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ mensaje: text }),
-});
-
-    console.log("🔎 Respuesta del servidor:", response.status);
+    const response = await fetch("https://arbeauty-chatbot.onrender.com/webhooks/meta/enviar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mensaje,
+        telefono: ultimoTelefono, // 🔹 Se asegura que se use el último número activo
+      }),
+    });
 
     if (!response.ok) {
-      console.error("❌ Error del servidor al enviar mensaje");
+      console.error("❌ Error enviando mensaje al servidor");
     } else {
-      console.log("✅ Mensaje enviado al backend correctamente");
+      console.log("📤 Mensaje enviado correctamente al cliente");
     }
-
   } catch (error) {
-    console.error("❌ Error al enviar mensaje:", error);
+    console.error("❌ Error en la solicitud:", error);
   }
 });
-
