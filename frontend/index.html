@@ -38,22 +38,21 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 20px 40px;
+      padding: 15px 35px;
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
     }
 
-    header h1 {
-      margin: 0;
-      font-weight: 600;
-      font-size: 1.3rem;
+    .logo {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
     }
 
-    header h1 span {
-      font-size: 1.6rem;
-      color: var(--lavanda);
+    .logo img {
+      height: 45px;
+      width: auto;
+      user-select: none;
+      -webkit-user-drag: none;
     }
 
     header button {
@@ -200,9 +199,11 @@
     }
   </script>
 
-  <!-- 🩷 Header -->
+  <!-- 🩷 Header con logo -->
   <header>
-    <h1><span>✦</span> ARBEAUTY Panel</h1>
+    <div class="logo">
+      <img src="assets/logo-arbeauty.png" alt="Logo ARBEAUTY" />
+    </div>
     <button onclick="logout()">Cerrar sesión</button>
   </header>
 
