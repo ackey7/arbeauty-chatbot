@@ -118,20 +118,29 @@ router.post("/", async (req, res) => {
       }
     }
 
-    // 🧠 Emitir mensaje al panel web (texto real y confirmado)
-    const textoFinal = message?.text?.body || textoRecibido || "";
-    if (textoFinal.trim() !== "") {
-      console.log("📢 Enviando al panel:", textoFinal);
-      io.emit("nuevoMensaje", {
-        de: "cliente",
-        nombre: name,
-        telefono: from,
-        texto: textoFinal,
-        fecha: new Date().toLocaleString("es-HN"),
-      });
-    } else {
-      console.log("⚠️ Mensaje vacío, no se emitió al panel");
-    }
+  // 🧠 Emitir mensaje al panel web (texto real y con ciudad)
+const textoFinal = message?.text?.body || textoRecibido || "";
+if (textoFinal.trim() !== "") {
+  const ciudad = session.ciudad || "Sin clasificar";
+
+  console.log("📢 Enviando al panel:", {
+    nombre: name,
+    telefono: from,
+    ciudad,
+    texto: textoFinal,
+  });
+
+  io.emit("nuevoMensaje", {
+    de: "cliente",
+    nombre: name,
+    telefono: from,
+    ciudad,
+    texto: textoFinal,
+    fecha: new Date().toLocaleString("es-HN"),
+  });
+} else {
+  console.log("⚠️ Mensaje vacío, no se emitió al panel");
+}
 
     res.sendStatus(200);
   } catch (error) {
