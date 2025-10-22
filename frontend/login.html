@@ -6,14 +6,13 @@
   <title>ARBEAUTY | Acceso al Panel</title>
 
   <!-- Tipografías -->
-  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;600&family=Great+Vibes&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;600&display=swap" rel="stylesheet" />
 
   <style>
     :root {
       --rosa-principal: #ffa6a4;
       --rosa-claro: #ffe6e1;
       --lavanda: #bbb8ff;
-      --azul-claro: #d7ecf9;
       --blanco: #ffffff;
       --texto: #4a4a4a;
     }
@@ -35,7 +34,7 @@
 
     .login-container {
       background: var(--blanco);
-      padding: 40px 50px;
+      padding: 45px 50px 35px;
       border-radius: 24px;
       box-shadow: 0 15px 35px rgba(255, 166, 164, 0.25);
       width: 360px;
@@ -61,18 +60,12 @@
       margin-bottom: 10px;
     }
 
-    .logo-text {
-      font-family: "Great Vibes", cursive;
-      font-size: 2.8rem;
-      color: var(--rosa-principal);
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .logo-star {
-      color: var(--lavanda);
-      font-size: 1.5rem;
+    .logo img {
+      width: 170px;
+      height: auto;
+      user-select: none;
+      -webkit-user-drag: none;
+      animation: fadeIn 1.5s ease;
     }
 
     h2 {
@@ -142,9 +135,7 @@
 <body>
   <div class="login-container">
     <div class="logo">
-      <div class="logo-text">
-        <span class="logo-star">✦</span> arbeauty
-      </div>
+      <img src="assets/logo-arbeauty.png" alt="Logo ARBEAUTY" />
     </div>
 
     <h2>Acceso al panel privado 💖</h2>
