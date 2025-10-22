@@ -8,7 +8,8 @@ const sendBtn = document.getElementById("send-btn");
 const chatHeader = document.getElementById("chat-header");
 const tabButtons = document.querySelectorAll(".tabs button");
 
-let chats = {}; // { telefono: { nombre, ciudad, mensajes: [] } }
+// 🔹 Persistencia local de chats (localStorage)
+let chats = JSON.parse(localStorage.getItem("arbeautyChats")) || {}; // Carga previa si existe
 let currentChat = null;
 let activeCity = "San Pedro Sula";
 
@@ -24,9 +25,14 @@ socket.on("nuevoMensaje", (msg) => {
 
   chats[telefono].mensajes.push({ de, texto, fecha });
 
+  // 💾 Guardar en localStorage
+  localStorage.setItem("arbeautyChats", JSON.stringify(chats));
+
   renderChatList();
   if (currentChat === telefono) renderMessages(telefono);
 });
+
+
 
 // 📋 Renderizar lista de chats
 function renderChatList() {
@@ -94,6 +100,8 @@ sendBtn.addEventListener("click", async () => {
     texto: mensaje,
     fecha: new Date().toLocaleString("es-HN"),
   });
+  localStorage.setItem("arbeautyChats", JSON.stringify(chats));
+
   renderMessages(currentChat);
 
   replyInput.value = "";
