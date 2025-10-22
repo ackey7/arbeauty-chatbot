@@ -55,7 +55,9 @@ router.post("/", async (req, res) => {
     if (!sessions[from]) {
       sessions[from] = { step: "inicio" };
     }
-    sessions[from].telefono = from; // 🔹 Guarda el número del cliente en su sesión
+
+    // Guardar número de teléfono y preparar mensaje
+    sessions[from].telefono = from;
     const session = sessions[from];
     let textoRecibido = "";
 
@@ -116,16 +118,20 @@ router.post("/", async (req, res) => {
       }
     }
 
- // 🧠 Emitir mensaje al panel web (texto real)
-if (message?.text?.body || textoRecibido) {
-  io.emit("nuevoMensaje", {
-    de: "cliente",
-    nombre: name,
-    telefono: from,
-    texto: message?.text?.body || textoRecibido,
-    fecha: new Date().toLocaleString("es-HN"),
-  });
-}
+    // 🧠 Emitir mensaje al panel web (texto real y confirmado)
+    const textoFinal = message?.text?.body || textoRecibido || "";
+    if (textoFinal.trim() !== "") {
+      console.log("📢 Enviando al panel:", textoFinal);
+      io.emit("nuevoMensaje", {
+        de: "cliente",
+        nombre: name,
+        telefono: from,
+        texto: textoFinal,
+        fecha: new Date().toLocaleString("es-HN"),
+      });
+    } else {
+      console.log("⚠️ Mensaje vacío, no se emitió al panel");
+    }
 
     res.sendStatus(200);
   } catch (error) {
