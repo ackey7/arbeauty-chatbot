@@ -1,4 +1,4 @@
-// 🟣 meta.js — arbeauty-chatbot
+// 🟣 meta.js — arbeauty-chatbot (Render version)
 
 import express from "express";
 import axios from "axios";
@@ -19,7 +19,7 @@ router.get("/", (req, res) => {
   const challenge = req.query["hub.challenge"];
 
   if (mode && token === VERIFY_TOKEN) {
-    console.log("✅ Webhook verificado correctamente");
+    console.log("✅ Webhook verificado correctamente en Render (puerto 10000)");
     res.status(200).send(challenge);
   } else {
     res.sendStatus(403);
@@ -30,19 +30,31 @@ router.get("/", (req, res) => {
 router.post("/", async (req, res) => {
   try {
     const data = req.body;
-    const io = req.app.get("io"); // obtenemos la instancia del socket
+    const io = req.app.get("io"); // instancia del socket
 
     if (data.object) {
-      const message = data.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+      const entry = data.entry?.[0];
+      const changes = entry?.changes?.[0]?.value;
+      const message = changes?.messages?.[0];
       const from = message?.from;
       const name = message?.profile?.name || "bella";
 
-      if (!message) return res.sendStatus(200); // ignorar mensajes vacíos
+      if (!message) return res.sendStatus(200);
 
-      // 🧠 Evitar duplicados (mensajes enviados por el mismo bot)
-      const BOT_NUMBER_ID = "50487497304"; // <-- coloca aquí tu número de teléfono del bot (sin +)
-      if (from === BOT_NUMBER_ID) {
-        console.log("🧩 Ignorado mensaje propio (eco del bot)");
+      // 🧠 Evitar duplicados o mensajes eco del bot
+      const BOT_NUMBER_ID = "50487497304"; // <-- tu número del bot (sin +)
+      const PHONE_ID = "807852259084079"; // <-- tu ID de teléfono de Meta
+
+      const sender = message?.from;
+      const isEcho =
+        sender === BOT_NUMBER_ID ||
+        sender === PHONE_ID ||
+        message?.status ||
+        message?.type === "message_template" ||
+        (message?.id?.startsWith("wamid.HBgL") && !message.text);
+
+      if (isEcho) {
+        console.log("🧩 Ignorado mensaje propio o eco de Meta");
         return res.sendStatus(200);
       }
 
@@ -112,7 +124,7 @@ router.post("/", async (req, res) => {
         }
       }
 
-      // 🧠 Emitir mensaje al frontend en tiempo real
+      // 🧠 Emitir mensaje al frontend (panel) en tiempo real
       if (textoRecibido) {
         io.emit("nuevoMensaje", {
           de: "cliente",
@@ -223,12 +235,10 @@ router.post("/enviar", async (req, res) => {
   try {
     const { mensaje, telefono } = req.body;
 
-    // Validar que haya texto
     if (!mensaje) {
       return res.status(400).json({ error: "Falta el mensaje a enviar" });
     }
 
-    // Si no se especifica número, toma el último que escribió (última sesión activa)
     const ultimoNumero = Object.keys(sessions).pop();
     const numeroDestino = telefono || ultimoNumero;
 
@@ -238,7 +248,6 @@ router.post("/enviar", async (req, res) => {
         .json({ error: "No hay sesión activa para enviar mensaje" });
     }
 
-    // Enviar mensaje a WhatsApp
     await axios.post(
       "https://graph.facebook.com/v19.0/807852259084079/messages",
       {
@@ -256,7 +265,6 @@ router.post("/enviar", async (req, res) => {
 
     console.log(`📤 Mensaje enviado a ${numeroDestino}: ${mensaje}`);
 
-    // Emitirlo también al panel como mensaje del bot
     const io = req.app.get("io");
     io.emit("nuevoMensaje", {
       de: "bot",
@@ -271,9 +279,7 @@ router.post("/enviar", async (req, res) => {
       "❌ Error enviando mensaje:",
       error.response?.data || error.message
     );
-    res
-      .status(500)
-      .json({ error: "Error enviando mensaje a WhatsApp" });
+    res.status(500).json({ error: "Error enviando mensaje a WhatsApp" });
   }
 });
 
